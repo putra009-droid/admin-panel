@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // URL API backend Anda, sesuaikan jika berbeda
     //const API_LOGIN_URL = 'http://159.203.179.29:3002/api/admin/login'; // Akan kita buat di server.js
     // Jika Anda sudah menggunakan HTTPS untuk API via Nginx reverse proxy:
-    const API_LOGIN_URL = '/api/admin/login'; // Path relatif
+    const API_LOGIN_URL = '/api-untuk-login-admin/login-admin-khusus'; // Path relatif
 
     // Cek apakah sudah login, jika ya, redirect ke admin.html
     if (localStorage.getItem('isAdminLoggedIn') === 'true') {
