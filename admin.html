@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Pesanan & Toko Boba</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhHzINaJw8h遒HwGPCCclwYFeuMxYpbsJROPZA4fGasRmqU/q4r2rMIGR3D9rFhD7A/7v/b"
+          crossorigin=""/>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        /* Style dasar untuk map container bisa langsung di sini atau di admin.css */
+        #adminMapContainer {
+            height: 400px; /* Anda bisa sesuaikan tinggi peta */
+            width: 100%;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: crosshair; /* Ubah cursor untuk menandakan bisa diklik */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manajemen Pesanan Boba</h1>
+        <button id="refreshOrdersButton">Segarkan Data Pesanan</button>
+        <div id="loadingOrdersMessage" class="message loading" style="display: none;">Memuat data pesanan...</div>
+        <div id="ordersErrorMessage" class="message error" style="display: none;"></div>
+        <div id="ordersSuccessMessage" class="message success" style="display: none;"></div>
+
+        <table id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Toko</th>
+                    <th>Total Bayar</th>
+                    <th>Status Saat Ini</th>
+                    <th>Waktu Pesan (FE)</th>
+                    <th>Waktu Diterima (BE)</th>
+                    <th>Update Terakhir (BE)</th>
+                    <th>Detail Item</th>
+                    <th>Ubah Status</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+        </table>
+
+        <hr class="section-divider">
+
+        <h1>Manajemen Toko Boba</h1>
+        <button id="refreshShopsButton">Segarkan Daftar Toko</button>
+        <div id="loadingShopsMessage" class="message loading" style="display: none;">Memuat data toko...</div>
+        <div id="shopsErrorMessage" class="message error" style="display: none;"></div>
+        <div id="shopsSuccessMessage" class="message success" style="display: none;"></div>
+
+        <h3>Form Tambah/Edit Toko</h3>
+        <form id="shopForm">
+            <input type="hidden" id="shopIdInput" name="shopIdInput">
+
+            <div class="form-group">
+                <label for="shopNameInput">Nama Toko:</label>
+                <input type="text" id="shopNameInput" name="shopNameInput" required>
+            </div>
+
+            <div class="form-group">
+                <label>Pilih Lokasi di Peta (klik pada peta atau geser penanda):</label>
+                <div id="adminMapContainer"></div> </div>
+
+            <div class="form-group">
+                <label for="shopLatInput">Latitude (otomatis dari peta):</label>
+                <input type="number" step="any" id="shopLatInput" name="shopLatInput" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="shopLngInput">Longitude (otomatis dari peta):</label>
+                <input type="number" step="any" id="shopLngInput" name="shopLngInput" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Menu Item:</label>
+                <div id="menuItemsContainer">
+                    </div>
+                <button type="button" id="addMenuItemButton" class="add-item-button">+ Tambah Item Menu</button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="saveShopButton">Simpan Toko</button>
+                <button type="button" id="clearShopFormButton">Kosongkan Form</button>
+            </div>
+        </form>
+
+        <h3>Daftar Toko Saat Ini</h3>
+        <table id="shopsTable">
+            <thead>
+                <tr>
+                    <th>ID Toko</th>
+                    <th>Nama Toko</th>
+                    <th>Posisi (Lat, Lng)</th>
+                    <th>Menu Items</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="shopsTableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <script src="admin.js"></script>
+</body>
+</html>
