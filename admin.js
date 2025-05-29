@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- URLs API ---
     // Menggunakan URL lengkap berdasarkan hasil tes Postman yang berhasil.
-    const API_BASE_URL = 'http://159.203.179.29:3001/api'; // <-- PERUBAHAN DI SINI
+    const API_BASE_URL = 'http://159.203.179.29:3002/api'; // <-- PERUBAHAN DI SINI
     // const API_BASE_URL = '/api'; // Baris ini dinonaktifkan
     const API_ORDERS_URL = `${API_BASE_URL}/orders`;
     const API_SHOPS_URL = `${API_BASE_URL}/shops`;
