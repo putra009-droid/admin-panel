@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginErrorMessage = document.getElementById('loginErrorMessage');
 
     // URL API backend Anda, sesuaikan jika berbeda
-    const API_LOGIN_URL = 'http://159.203.179.29:3001/api/admin/login'; // Akan kita buat di server.js
+    const API_LOGIN_URL = 'http://159.203.179.29:3002/api/admin/login'; // Akan kita buat di server.js
     // Jika Anda sudah menggunakan HTTPS untuk API via Nginx reverse proxy:
     // const API_LOGIN_URL = '/api/admin/login'; // Path relatif
 
