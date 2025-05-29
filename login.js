@@ -6,10 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginButton = document.getElementById('loginButton');
     const loginErrorMessage = document.getElementById('loginErrorMessage');
 
-    // URL API backend Anda, sesuaikan jika berbeda
-    //const API_LOGIN_URL = 'http://159.203.179.29:3002/api/admin/login'; // Akan kita buat di server.js
-    // Jika Anda sudah menggunakan HTTPS untuk API via Nginx reverse proxy:
-    const API_LOGIN_URL = '/api-untuk-login-admin/login-admin-khusus'; // Path relatif
+    // URL API backend Anda, akan diarahkan oleh Nginx
+    // Frontend akan mengirim request ke https://admin.boba-maps.xyz/admin-login-api/login
+    const API_LOGIN_URL = '/admin-login-api/login';
 
     // Cek apakah sudah login, jika ya, redirect ke admin.html
     if (localStorage.getItem('isAdminLoggedIn') === 'true') {
@@ -27,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = passwordInput.value;
 
         try {
-            const response = await fetch(API_LOGIN_URL, {
+            const response = await fetch(API_LOGIN_URL, { // Menggunakan URL yang sudah didefinisikan
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -35,16 +34,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ username, password }),
             });
 
-            const data = await response.json();
+            // Coba untuk mendapatkan teks respons dulu, untuk debugging jika bukan JSON
+            const responseText = await response.text();
 
-            if (response.ok && data.success) {
-                // Simpan status login di localStorage
+            if (!response.ok) {
+                // Jika respons tidak OK, coba tampilkan pesan error dari server jika ada,
+                // atau pesan error umum jika respons bukan JSON atau tidak ada pesan.
+                let errorMessage = `Login gagal: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(responseText); // Coba parse sebagai JSON jika mungkin ada pesan error
+                    if (errorData && errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (e) {
+                    // Jika parse gagal, berarti respons bukan JSON (mungkin halaman HTML error)
+                    // Tampilkan sebagian kecil dari responseText untuk petunjuk (hati-hati dengan info sensitif)
+                    console.error("Respons bukan JSON:", responseText.substring(0, 100)); // Tampilkan 100 karakter pertama
+                }
+                throw new Error(errorMessage);
+            }
+            
+            // Jika respons OK, baru parse sebagai JSON
+            const data = JSON.parse(responseText);
+
+            if (data.success) { // Asumsi backend mengirim { success: true, ... }
                 localStorage.setItem('isAdminLoggedIn', 'true');
-                // Simpan token jika backend mengirimkannya (opsional untuk implementasi sederhana ini)
                 if (data.token) {
                     localStorage.setItem('adminAuthToken', data.token);
                 }
-                window.location.href = 'admin.html'; // Redirect ke halaman admin
+                window.location.href = 'admin.html';
             } else {
                 throw new Error(data.message || 'Login gagal. Periksa username dan password.');
             }
