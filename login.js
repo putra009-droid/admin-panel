@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // URL API backend Anda, akan diarahkan oleh Nginx
     // Frontend akan mengirim request ke https://admin.boba-maps.xyz/admin-login-api/login
-    const API_LOGIN_URL = '/admin-login-api/login';
+    const API_LOGIN_URL = '/admin-data-api/admin/login';
 
     // Cek apakah sudah login, jika ya, redirect ke admin.html
     if (localStorage.getItem('isAdminLoggedIn') === 'true') {
