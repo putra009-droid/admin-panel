@@ -16,13 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
         });
     } else {
-        // Opsi: Buat tombol logout secara dinamis jika tidak ada di HTML
         const headerContainer = document.querySelector('.container h1');
         if (headerContainer && headerContainer.parentElement) {
             const dynLogoutButton = document.createElement('button');
             dynLogoutButton.id = 'dynamicLogoutButton';
             dynLogoutButton.textContent = 'Logout Admin';
-            dynLogoutButton.style.cssText = "background-color: #e53e3e; position: absolute; top: 20px; right: 20px; padding: 8px 15px; font-size: 0.9em;";
+            dynLogoutButton.style.cssText = "background-color: #e53e3e; color: white; border: none; position: absolute; top: 20px; right: 20px; padding: 8px 15px; font-size: 0.9em; border-radius: 4px; cursor: pointer;";
             dynLogoutButton.addEventListener('click', () => {
                 localStorage.removeItem('isAdminLoggedIn');
                 localStorage.removeItem('adminAuthToken');
@@ -52,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const shopForm = document.getElementById('shopForm');
     const shopIdInput = document.getElementById('shopIdInput');
     const shopNameInput = document.getElementById('shopNameInput');
+    const shopWhatsappInput = document.getElementById('shopWhatsappInput'); // BARU
     const shopLatInput = document.getElementById('shopLatInput');
     const shopLngInput = document.getElementById('shopLngInput');
     const menuItemsContainer = document.getElementById('menuItemsContainer');
@@ -67,9 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultAdminMapZoom = 13;
 
     // --- URLs API ---
-    // Menggunakan path relatif yang akan ditangani oleh Nginx reverse proxy
-    // Frontend akan mengirim request ke https://admin.boba-maps.xyz/admin-data-api/...
-    const API_BASE_URL = '/admin-data-api'; // <-- PERUBAHAN DI SINI
+    const API_BASE_URL = '/admin-data-api';
     const API_ORDERS_URL = `${API_BASE_URL}/orders`;
     const API_SHOPS_URL = `${API_BASE_URL}/shops`;
 
@@ -91,11 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatTanggal(isoString) {
         if (!isoString) return '-';
-        // Waktu Indonesia Tengah (WITA) adalah UTC+8
-        // Format tanggal ke 'Asia/Makassar'
         const date = new Date(isoString);
         return date.toLocaleString('id-ID', {
-            timeZone: 'Asia/Makassar', // WITA
+            timeZone: 'Asia/Makassar',
             year: 'numeric', month: 'short', day: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
@@ -131,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (adminMap && typeof adminMap.remove === 'function') {
             adminMap.remove();
-            adminMap = null; // Set ke null agar dibuat ulang
+            adminMap = null;
         }
         adminMap = L.map(adminMapContainer).setView(mapCenter, mapZoom);
 
@@ -174,10 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ordersTableBody.innerHTML = '';
 
         try {
-            const response = await fetch(API_ORDERS_URL); // Menggunakan URL yang sudah didefinisikan
+            const response = await fetch(API_ORDERS_URL);
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-                throw new Error(errorData.message || `Gagal mengambil data pesanan: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error("Orders API Error Response Text:", errorText.substring(0, 500));
+                let errorMessage = `Gagal mengambil data pesanan: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    if (errorData && errorData.message) errorMessage = errorData.message;
+                } catch (e) {}
+                throw new Error(errorMessage);
             }
             const data = await response.json();
             if (data.orders && data.orders.length > 0) {
@@ -187,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
-            showMessage(ordersErrorMessage, `Error pesanan: ${error.message}. Pastikan server backend berjalan dan Nginx reverse proxy dikonfigurasi dengan benar.`, true);
+            showMessage(ordersErrorMessage, `Error pesanan: ${error.message}.`, true);
             ordersTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Gagal memuat data pesanan.</td></tr>';
         } finally {
             if (loadingOrdersMessage) loadingOrdersMessage.style.display = 'none';
@@ -200,8 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
         buttonElement.textContent = 'Updating...';
 
         try {
-            // Pastikan URL untuk update status juga menggunakan base path yang benar jika diperlukan
-            // Saat ini, API_ORDERS_URL sudah benar.
             const response = await fetch(`${API_ORDERS_URL}/${orderId}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -278,21 +278,27 @@ document.addEventListener('DOMContentLoaded', () => {
         shopsTableBody.innerHTML = '';
 
         try {
-            const response = await fetch(API_SHOPS_URL); // Menggunakan URL yang sudah didefinisikan
+            const response = await fetch(API_SHOPS_URL);
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-                throw new Error(errorData.message || `Gagal mengambil data toko: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error("Shops API Error Response Text:", errorText.substring(0, 500));
+                let errorMessage = `Gagal mengambil data toko: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    if (errorData && errorData.message) errorMessage = errorData.message;
+                } catch (e) {}
+                throw new Error(errorMessage);
             }
             const data = await response.json();
             if (data.shops && Array.isArray(data.shops) && data.shops.length > 0) {
                 renderShops(data.shops);
             } else {
-                shopsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data toko. Tambahkan toko baru menggunakan form di atas.</td></tr>';
+                shopsTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada data toko. Tambahkan toko baru menggunakan form di atas.</td></tr>'; // Colspan jadi 6
             }
         } catch (error) {
             console.error('Error fetching shops:', error);
-            showMessage(shopsErrorMessage, `Error toko: ${error.message}. Pastikan server backend berjalan dan Nginx reverse proxy dikonfigurasi dengan benar.`, true);
-            shopsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Gagal memuat data toko.</td></tr>';
+            showMessage(shopsErrorMessage, `Error toko: ${error.message}.`, true);
+            shopsTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Gagal memuat data toko.</td></tr>'; // Colspan jadi 6
         } finally {
             if (loadingShopsMessage) loadingShopsMessage.style.display = 'none';
         }
@@ -306,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.insertCell().textContent = shop.id;
             row.insertCell().textContent = shop.name;
             row.insertCell().textContent = shop.position && Array.isArray(shop.position) ? `[${shop.position[0].toFixed(4)}, ${shop.position[1].toFixed(4)}]` : '-';
+            row.insertCell().textContent = shop.whatsappNumber || '-'; // BARU: Tampilkan Nomor WA
 
             const menuCell = row.insertCell();
             menuCell.classList.add('item-details');
@@ -365,9 +372,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateShopFormForEdit(shop) {
-        if (!shopForm || !shopIdInput || !shopNameInput || !shopLatInput || !shopLngInput || !menuItemsContainer) return;
+        if (!shopForm || !shopIdInput || !shopNameInput || !shopWhatsappInput || !shopLatInput || !shopLngInput || !menuItemsContainer) return;
         shopIdInput.value = shop.id;
         shopNameInput.value = shop.name || '';
+        shopWhatsappInput.value = shop.whatsappNumber || ''; // BARU: Isi nomor WA
         let latForMap, lngForMap;
 
         if (shop.position && Array.isArray(shop.position) && shop.position.length === 2) {
@@ -397,9 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearShopForm() {
-        if (!shopForm || !shopIdInput || !menuItemsContainer || !shopLatInput || !shopLngInput) return;
-        shopForm.reset();
+        if (!shopForm || !shopIdInput || !shopNameInput || !shopWhatsappInput || !menuItemsContainer || !shopLatInput || !shopLngInput) return;
+        shopForm.reset(); // Ini akan mengosongkan semua input dalam form
         shopIdInput.value = '';
+        // shopNameInput.value = ''; // Dikosongkan oleh form.reset()
+        // shopWhatsappInput.value = ''; // Dikosongkan oleh form.reset()
         shopLatInput.value = ''; 
         shopLngInput.value = ''; 
         menuItemsContainer.innerHTML = '';
@@ -429,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const id = shopIdInput.value;
         const name = shopNameInput.value.trim();
+        const whatsapp = shopWhatsappInput.value.trim() || null; // BARU: Ambil nomor WA
         const latString = shopLatInput.value.trim();
         const lngString = shopLngInput.value.trim();
 
@@ -478,9 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const shopData = { name, position: [lat, lng], menu: menuItems };
+        const shopData = { name, position: [lat, lng], menu: menuItems, whatsappNumber: whatsapp }; // BARU: Sertakan whatsappNumber
         const method = id ? 'PUT' : 'POST';
-        // API_SHOPS_URL sudah menggunakan base path yang benar.
         const url = id ? `${API_SHOPS_URL}/${id}` : API_SHOPS_URL;
 
         try {
@@ -510,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            // API_SHOPS_URL sudah menggunakan base path yang benar.
             const response = await fetch(`${API_SHOPS_URL}/${shopId}`, { method: 'DELETE' });
             const result = await response.json();
             if (!response.ok) {
@@ -536,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Inisialisasi ---
     if (typeof L !== 'undefined' && adminMapContainer) {
         initAdminMap();
-        clearShopForm();
+        clearShopForm(); // Clear form juga akan menambahkan 1 baris menu default
     } else {
         console.error("Leaflet (L) atau #adminMapContainer tidak ditemukan. Peta admin tidak bisa diinisialisasi.");
         if (shopsErrorMessage) showMessage(shopsErrorMessage, "Komponen peta admin gagal dimuat.", true);
